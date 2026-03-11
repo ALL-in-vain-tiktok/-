@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>雪漫生日快乐 · 粒子照片</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+margin:0;
+background:#070716;
+overflow:hidden;
+font-family:"Microsoft YaHei","苹方-简","PingFang SC","Helvetica Neue",Helvetica,Arial,sans-serif;
+width:100vw;
+height:100vh;
+position:fixed;
+top:0;left:0;right:0;bottom:0;
+-webkit-tap-highlight-color:transparent;
+}
+
+canvas{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+display:block;
+pointer-events:none;
+}
+
+#title{
+position:absolute;
+top:5%;
+width:100%;
+text-align:center;
+font-size:clamp(28px,8vw,44px);
+color:white;
+text-shadow:0 0 20px #ff99cc,0 0 40px #ff66b2;
+z-index:20;
+letter-spacing:2px;
+pointer-events:none;
+padding:0 16px;
+line-height:1.3;
+word-break:keep-all;
+}
+
+.footer{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+text-align:center;
+color:#ffb6c1;
+font-size:clamp(14px,4vw,18px);
+z-index:20;
+text-shadow:0 0 8px #ff3388;
+background:rgba(7,7,22,0.4);
+backdrop-filter:blur(4px);
+padding:10px env(safe-area-inset-bottom,10px) 8px env(safe-area-inset-bottom,10px);
+border-top:1px solid rgba(255,182,193,0.2);
+line-height:1.4;
+letter-spacing:0.5px;
+}
+
+#loading{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+color:#ffc0cb;
+font-size:18px;
+display:none;
+z-index:30;
+background:rgba(7,7,22,0.7);
+padding:10px 24px;
+border-radius:40px;
+backdrop-filter:blur(8px);
+border:1px solid rgba(255,255,255,0.2);
+box-shadow:0 8px 20px rgba(0,0,0,0.3);
+white-space:nowrap;
+max-width:80vw;
+overflow:hidden;
+text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div id="title">✨ 雪漫生日快乐 ✨</div>
+<div id="loading">⏳ 正在加载照片...</div>
+
+<canvas id="canvas"></canvas>
+
+<div class="footer">来自了无益的一点小惊喜 🎁 生日快乐，雪漫！</div>
+
+<script>
+(function(){
+
+"use strict"
+
+const canvas=document.getElementById("canvas")
+const ctx=canvas.getContext("2d")
+const titleEl=document.getElementById("title")
+const loadingEl=document.getElementById("loading")
+
+let particles=[]
+let targets=[]
+let stars=[]
+let photoMode=false
+
+let vw=window.innerWidth
+let vh=window.innerHeight
+
+function setCanvasSize(){
+
+const dpr=window.devicePixelRatio||1
+
+vw=window.innerWidth
+vh=window.innerHeight
+
+canvas.width=vw*dpr
+canvas.height=vh*dpr
+
+canvas.style.width=vw+"px"
+canvas.style.height=vh+"px"
+
+ctx.setTransform(dpr,0,0,dpr,0,0)
+
+}
+
+setCanvasSize()
+
+window.addEventListener("resize",()=>{
+setCanvasSize()
+stars=[]
+createStars()
+})
+
+class Particle{
+
+constructor(t){
+this.x=Math.random()*vw
+this.y=Math.random()*vh
+this.tx=t.x
+this.ty=t.y
+this.vx=(Math.random()-0.5)*40
+this.vy=(Math.random()-0.5)*40
+this.size=t.size
+this.color=t.color
+}
+
+update(){
+this.vx*=0.8
+this.vy*=0.8
+this.x+=this.vx
+this.y+=this.vy
+let speed=photoMode?0.14:0.07
+this.x+=(this.tx-this.x)*speed
+this.y+=(this.ty-this.y)*speed
+}
+
+draw(){
+ctx.beginPath()
+ctx.arc(this.x,this.y,this.size,0,Math.PI*2)
+ctx.shadowColor=this.color
+ctx.shadowBlur=12
+ctx.fillStyle=this.color
+ctx.fill()
+ctx.shadowBlur=0
+}
+
+}
+
+function createParticles(){
+particles=[]
+targets.forEach(t=>particles.push(new Particle(t)))
+}
+
+function animate(){
+
+ctx.fillStyle=photoMode?"rgba(7,7,22,1)":"rgba(7,7,22,0.4)"
+ctx.fillRect(0,0,vw,vh)
+
+drawStars()
+
+particles.forEach(p=>{
+p.update()
+p.draw()
+})
+
+requestAnimationFrame(animate)
+}
+
+animate()
+
+function createStars(){
+
+let count=Math.min(100,Math.floor(vw*0.1))
+
+for(let i=0;i<count;i++){
+stars.push({
+x:Math.random()*vw,
+y:Math.random()*vh,
+size:Math.random()*2,
+speed:Math.random()*0.3+0.1
+})
+}
+
+}
+
+function drawStars(){
+
+ctx.fillStyle="white"
+
+stars.forEach(s=>{
+s.y+=s.speed
+if(s.y>vh){
+s.y=0
+s.x=Math.random()*vw
+}
+
+ctx.beginPath()
+ctx.arc(s.x,s.y,s.size,0,Math.PI*2)
+ctx.fill()
+})
+
+}
+
+createStars()
+
+function createTextParticles(){
+
+let temp=document.createElement("canvas")
+let tctx=temp.getContext("2d")
+
+temp.width=vw
+temp.height=vh
+
+tctx.fillStyle="white"
+tctx.textAlign="center"
+tctx.textBaseline="middle"
+
+let fontSize1=Math.min(110,vw*0.2)
+let fontSize2=Math.min(90,vw*0.18)
+
+tctx.font=`bold ${fontSize1}px Microsoft YaHei`
+tctx.fillText("生日快乐",vw/2,vh/2-fontSize1*0.6)
+
+tctx.font=`bold ${fontSize2}px Microsoft YaHei`
+tctx.fillText("雪漫",vw/2,vh/2+fontSize2*0.5)
+
+let data=tctx.getImageData(0,0,vw,vh).data
+
+targets=[]
+
+let step=Math.max(4,Math.floor(vw/200))
+
+for(let y=0;y<vh;y+=step){
+for(let x=0;x<vw;x+=step){
+
+let i=(y*vw+x)*4
+
+if(data[i+3]>150){
+targets.push({
+x:x,
+y:y,
+color:`hsl(${(x+y)%360},90%,70%)`,
+size:2
+})
+}
+
+}
+}
+
+createParticles()
+
+}
+
+function createHeart(){
+
+targets=[]
+
+let cx=vw/2
+let cy=vh/2+60
+let size=Math.min(vw,vh)*0.22
+
+for(let i=0;i<400;i++){
+
+let t=(i/400)*Math.PI*2
+
+let x=16*Math.pow(Math.sin(t),3)
+let y=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))
+
+targets.push({
+x:cx+x*size*0.04,
+y:cy+y*size*0.04,
+color:"hsl(330,90%,70%)",
+size:2.4
+})
+
+}
+
+createParticles()
+
+}
+
+function createShowText(){
+
+let temp=document.createElement("canvas")
+let tctx=temp.getContext("2d")
+
+temp.width=vw
+temp.height=vh
+
+tctx.fillStyle="white"
+tctx.textAlign="center"
+tctx.textBaseline="middle"
+
+let fontSize1=Math.min(52,vw*0.1)
+let fontSize2=Math.min(64,vw*0.12)
+
+tctx.font=`bold ${fontSize1}px Microsoft YaHei`
+tctx.fillText("下面请欣赏",vw/2,vh/2-fontSize1*0.8)
+
+tctx.font=`bold ${fontSize2}px Microsoft YaHei`
+tctx.fillText("今天最美的大美女！",vw/2,vh/2+fontSize2*0.5)
+
+let data=tctx.getImageData(0,0,vw,vh).data
+
+targets=[]
+
+let step=Math.max(4,Math.floor(vw/200))
+
+for(let y=0;y<vh;y+=step){
+for(let x=0;x<vw;x+=step){
+
+let i=(y*vw+x)*4
+
+if(data[i+3]>150){
+targets.push({
+x:x,
+y:y,
+color:"hsl(330,90%,70%)",
+size:2.2
+})
+}
+
+}
+}
+
+createParticles()
+
+}
+
+function processImage(img){
+
+photoMode=true
+
+let temp=document.createElement("canvas")
+let tctx=temp.getContext("2d")
+
+let w=380
+let h=w*(img.height/img.width)
+
+temp.width=w
+temp.height=h
+
+tctx.drawImage(img,0,0,w,h)
+
+let data=tctx.getImageData(0,0,w,h).data
+
+targets=[]
+
+for(let y=0;y<h;y+=2){
+for(let x=0;x<w;x+=2){
+
+let i=(y*w+x)*4
+
+let r=data[i]
+let g=data[i+1]
+let b=data[i+2]
+
+let scale=vh*0.8/h
+
+let px=x*scale
+let py=y*scale
+
+px+=(vw-w*scale)/2
+py+=vh*0.1
+
+targets.push({
+x:Math.round(px),
+y:Math.round(py),
+color:`rgb(${r},${g},${b})`,
+size:1.6
+})
+
+}
+}
+
+createParticles()
+
+}
+
+function loadImage(url){
+
+loadingEl.style.display="block"
+
+let img=new Image()
+
+img.crossOrigin="anonymous"
+
+img.onload=()=>{
+loadingEl.style.display="none"
+processImage(img)
+}
+
+img.onerror=()=>{
+loadingEl.style.display="none"
+createHeart()
+}
+
+img.src=url+"?_t="+Date.now()
+
+}
+
+createTextParticles()
+
+setTimeout(()=>{
+createHeart()
+titleEl.innerText="❤️ 生日快乐啊，小粉毛 ❤️"
+},4000)
+
+setTimeout(()=>{
+createShowText()
+titleEl.innerText="✨ 请欣赏今天最美的大美女 ✨"
+},8000)
+
+setTimeout(()=>{
+let url="https://user4091.cn.imgto.link/public/20260310/d5f889c890319569f762ac4462c3d2e4.avif"
+loadImage(url)
+},12500)
+
+document.body.addEventListener("touchstart",(e)=>{
+e.preventDefault()
+},{passive:false})
+
+})()
+</script>
+
+</body>
+</html>
